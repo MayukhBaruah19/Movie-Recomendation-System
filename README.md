@@ -86,3 +86,21 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 # Project Structure
+```
+.
+├── README.md
+├── app.py
+├── data
+│   ├── tmdb_5000_credits.csv
+│   └── tmdb_5000_movies.csv
+├── demo
+│   ├── demo1.png
+│   ├── demo2.png
+│   ├── demo3.jpeg
+│   └── demo4.png
+├── movie_dict.pkl
+├── movie_recomender_system.ipynb.ipynb
+├── movies_list.pkl
+├── requirements.txt
+└── similarity.pkl
+```
