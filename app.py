@@ -37,7 +37,7 @@ def fetch_poster(movie_id):
     return "https://via.placeholder.com/500x750?text=Poster+Unavailable"
 
 
-
+    
 # Load movie data and similarity matrix
 try:
     movie_dict = pickle.load(open('movie_dict.pkl', 'rb'))
@@ -75,7 +75,7 @@ def recommend(movie):
         movie_id = movies.iloc[i[0]].movie_id
         recommended_movies.append(movies.iloc[i[0]].title)
 
-        # Fetch poster safely
+        # Fetch poster
         poster_url = fetch_poster(movie_id)
         recommended_posters.append(poster_url)
 
@@ -91,7 +91,9 @@ selected_movie_name = st.selectbox(
 )
 
 if st.button("Recommend"):
-    names, posters = recommend(selected_movie_name)
+    with st.spinner('Finding recommendations...'):
+        
+      names, posters = recommend(selected_movie_name)
 
     cols = st.columns(5)
     for i in range(5):
