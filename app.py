@@ -1,79 +1,100 @@
 import streamlit as st
-import streamlit as st
 import pickle
 import pandas as pd
-import numpy as np
 import requests
+import time
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import CountVectorizer
 
 
+# Fetch movie poster from TMDb
+
+@st.cache_data(show_spinner=False)
 def fetch_poster(movie_id):
-    url = "https://api.themoviedb.org/3/movie/{}?api_key=8265bd1679663a7ea12ac168da84d2e8&language=en-US".format(
-        movie_id)
-    data = requests.get(url)
-    data = data.json()
-    poster_path = data['poster_path']
-    full_path = "https://image.tmdb.org/t/p/w500/" + poster_path
-    return full_path
+    """
+    Fetches the movie poster URL from TMDb API.
+    Includes retries, error handling, and a fallback image.
+    """
+    url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key=8265bd1679663a7ea12ac168da84d2e8&language=en-US"
+
+    for attempt in range(3):  # Try up to 3 times
+        try:
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()  # Raises HTTPError for bad responses
+            data = response.json()
+
+            poster_path = data.get('poster_path')
+            if not poster_path:
+                return "https://via.placeholder.com/500x750?text=No+Poster+Available"
+
+            return f"https://image.tmdb.org/t/p/w500/{poster_path}"
+
+        except requests.exceptions.RequestException as e:
+            print(f"Attempt {attempt + 1}: Error fetching poster for ID {movie_id} -> {e}")
+            time.sleep(1.5)  # Wait before retrying
+
+    # If all retries fail, return placeholder
+    return "https://via.placeholder.com/500x750?text=Poster+Unavailable"
 
 
-# Load pickle files
-movie_dict = pickle.load(open('movie_dict.pkl', 'rb'))
-movies = pd.DataFrame(movie_dict)
 
-count_vector = CountVectorizer(max_features=5000, stop_words='english')
-vector = count_vector.fit_transform(movies['tags']).toarray()
-similarity = cosine_similarity(vector)
+# Load movie data and similarity matrix
+try:
+    movie_dict = pickle.load(open('movie_dict.pkl', 'rb'))
+    movies = pd.DataFrame(movie_dict)
+except Exception as e:
+    st.error(f"Error loading movie_dict.pkl: {e}")
+    st.stop()
 
 try:
     similarity = pickle.load(open('similarity.pkl', 'rb'))
 except FileNotFoundError:
-    print("File not found. Please check the path to 'movies_list.pkl'.")
+    st.error("File 'similarity.pkl' not found. Please check the file path.")
+    st.stop()
 except Exception as e:
-    print(f"An error occurred: {e}")
-# similarity = pickle.load(open('similarity.pkl', 'rb'))
-
-st.title('Movie Recomendation System')
+    st.error(f"Error loading similarity file: {e}")
+    st.stop()
 
 
-def recommended(movie):
+
+# Recommend movies
+def recommend(movie):
+    """
+    Given a movie title, returns top 5 similar movies and their posters.
+    """
     movie_index = movies[movies['title'] == movie].index[0]
-    distance = similarity[movie_index]
-    movie_list = sorted(list(enumerate(distance)),
-                        reverse=True, key=lambda x: x[1])[1:6]
+    distances = similarity[movie_index]
+    movie_list = sorted(
+        list(enumerate(distances)), reverse=True, key=lambda x: x[1]
+    )[1:6]
 
-    recomended_movie = []
-    recomended_movie_poster = []
+    recommended_movies = []
+    recommended_posters = []
+
     for i in movie_list:
         movie_id = movies.iloc[i[0]].movie_id
+        recommended_movies.append(movies.iloc[i[0]].title)
 
-        # fetch poster from API
-        recomended_movie.append(movies.iloc[i[0]].title)
-        recomended_movie_poster.append(fetch_poster(movie_id))
-    return recomended_movie, recomended_movie_poster
+        # Fetch poster safely
+        poster_url = fetch_poster(movie_id)
+        recommended_posters.append(poster_url)
 
+    return recommended_movies, recommended_posters
+
+
+
+# Streamlit UI
+st.title("🎬 Movie Recommendation System")
 
 selected_movie_name = st.selectbox(
-    "Select The Movie", movies['title'].values)
+    "Select a movie to get recommendations:", movies['title'].values
+)
 
-# st.button("Reset", type="primary")
-if st.button("Recomend"):
-    names, posters = recommended(selected_movie_name)
-    col1, col2, col3, col4, col5 = st.columns(5)
-    with col1:
-        st.text(names[0])
-        st.image(posters[0])
-    with col2:
-        st.text(names[1])
-        st.image(posters[1])
+if st.button("Recommend"):
+    names, posters = recommend(selected_movie_name)
 
-    with col3:
-        st.text(names[2])
-        st.image(posters[2])
-    with col4:
-        st.text(names[3])
-        st.image(posters[3])
-    with col5:
-        st.text(names[4])
-        st.image(posters[4])
+    cols = st.columns(5)
+    for i in range(5):
+        with cols[i]:
+            st.text(names[i])
+            st.image(posters[i])
