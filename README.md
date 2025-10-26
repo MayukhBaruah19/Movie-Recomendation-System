@@ -46,9 +46,61 @@ The purpose of a recommendation system basically is to search for content that w
 # About This project
 This is a streamlit web application that can recommend various kinds of similar movies based on an user interest.
 # Demo
-<img src="demo/1.png" alt="workflow" width="70%">
+<img src="demo/demo1.png" alt="workflow" width="80%">
 
-<img src="demo/2.png" alt="workflow" width="70%">
+<img src="demo/demo2.png" alt="workflow" width="80%">
 
-<img src="demo/3.png" alt="workflow" width="70%">
+<img src="demo/demo4.png" alt="workflow" width="80%">
 
+# DataSet Used :
+[DatasetLink](https://www.kaggle.com/datasets/tmdb/tmdb-movie-metadata)
+# Concept used : 
+1. ## cosine_similarity :
+  - Cosine similarity is a metric used to measure the similarity between two non-zero vectors in an inner product space by calculating the cosine of the angle between them.
+  - In order to demonstrate cosine similarity function we need vectors. Here vectors are numpy array.
+  - Finally, Once we have vectors, We can call cosine_similarity() by passing both vectors. It will calculate the cosine similarity between these two.
+  - It will be a value between [0,1]. If it is 0 then both vectors are complete different. But in the place of that if it is 1, It will be completely similar.
+# How to run : 
+## STEP 01 : 
+**clone the repository :** 
+```
+git clone https://github.com/MayukhBaruah19/Movie-Recomendation-System.git
+```
+## STEP 02 : 
+**Create a conda environment :** 
+```
+conda create -p venv python=3.12 -y
+```
+**Activate the envirnment :**
+```
+conda activate venv
+```
+## STEP 03 : 
+**install the requirements :**
+```
+pip install -r requirements.txt
+```
+## STEP 04 :
+**Run the app.py file :**
+```
+streamlit run app.py
+```
+# Project Structure
+```
+.
+├── README.md
+├── app.py
+├── data
+│   ├── tmdb_5000_credits.csv
+│   └── tmdb_5000_movies.csv
+├── demo
+│   ├── demo1.png
+│   ├── demo2.png
+│   ├── demo3.jpeg
+│   └── demo4.png
+├── movie_dict.pkl
+├── movie_recomender_system.ipynb.ipynb
+├── movies_list.pkl
+├── requirements.txt
+└── similarity.pkl
+```
